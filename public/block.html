@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今は開けません！ - Slack Focus Helper</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .details {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .time-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚫</div>
+        <h1>今は開けません！</h1>
+        <p class="message">
+            指定された時間帯のため、このサイトへのアクセスがブロックされています。<br>
+            集中時間を有効活用しましょう！
+        </p>
+        
+        <div class="details">
+            <div class="detail-item">
+                <span class="detail-label">ブロック理由:</span>
+                <span id="group-name">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">現在時刻:</span>
+                <span id="current-time">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">ブロック対象URL:</span>
+                <span id="blocked-url">-</span>
+            </div>
+        </div>
+        
+        <a href="#" class="button" id="settings-link">設定を変更する</a>
+        
+        <div class="time-display">
+            リアルタイム: <span id="live-time"></span>
+        </div>
+    </div>
+
+    <script>
+        // URLパラメータから情報を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupName = urlParams.get('group') || '不明なグループ';
+        const currentTime = urlParams.get('time') || '-';
+        const blockedUrl = urlParams.get('url') || '-';
+
+        // 情報を表示
+        document.getElementById('group-name').textContent = groupName;
+        document.getElementById('current-time').textContent = currentTime;
+        document.getElementById('blocked-url').textContent = blockedUrl;
+
+        // 設定リンクをポップアップに設定
+        document.getElementById('settings-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (chrome && chrome.runtime) {
+                chrome.runtime.openOptionsPage?.() || 
+                chrome.tabs?.create({ url: chrome.runtime.getURL('popup.html') }) ||
+                window.close();
+            }
+        });
+
+        // リアルタイム時計
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('live-time').textContent = timeString;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // 5秒ごとにブロック状態を再チェック
+        setInterval(async () => {
+            try {
+                if (browser && browser.runtime) {
+                    const response = await browser.runtime.sendMessage({
+                        type: 'CHECK_BLOCK',
+                        url: blockedUrl
+                    });
+                    
+                    if (response && !response.shouldBlock) {
+                        // ブロックが解除された場合、元のURLに戻る
+                        window.location.href = blockedUrl;
+                    }
+                }
+            } catch (error) {
+                console.log('Block check failed:', error);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
