@@ -7,13 +7,17 @@ export default defineConfig({
     permissions: [
       'storage',
       'activeTab',
-      'tabs'
+      'tabs',
+      'scripting'
     ],
     host_permissions: [
       '<all_urls>'
     ],
     name: 'Slack Focus Helper',
     description: '指定した時間帯に特定のWebサイトへのアクセスをブロックするChrome拡張機能',
-    version: '0.1.0'
+    version: '0.1.0',
+    action: {
+      default_popup: 'popup.html'
+    }
   }
 });

@@ -24,10 +24,14 @@ export default defineBackground(() => {
 
     if (message.type === 'GET_CURRENT_URL') {
       try {
+        console.log('Getting current URL...');
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-        if (tabs[0]?.url) {
+        console.log('Found tabs:', tabs);
+        if (tabs.length > 0 && tabs[0]?.url) {
+          console.log('Current URL:', tabs[0].url);
           return { url: tabs[0].url };
         }
+        console.log('No active tab or URL found');
         return { url: null };
       } catch (error) {
         console.error('Error getting current URL:', error);

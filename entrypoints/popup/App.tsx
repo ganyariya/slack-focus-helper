@@ -20,9 +20,22 @@ function App() {
       setSectionGroups(groups);
       
       // Get current tab URL
+      console.log('Requesting current URL...');
       const response = await browser.runtime.sendMessage({ type: 'GET_CURRENT_URL' });
+      console.log('Response:', response);
       if (response?.url) {
         setCurrentUrl(response.url);
+      } else {
+        console.log('No URL in response');
+        // Fallback: try to get URL directly from chrome API
+        try {
+          const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+          if (tabs[0]?.url) {
+            setCurrentUrl(tabs[0].url);
+          }
+        } catch (fallbackError) {
+          console.error('Fallback URL fetch failed:', fallbackError);
+        }
       }
     } catch (error) {
       console.error('Failed to load data:', error);
