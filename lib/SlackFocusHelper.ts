@@ -1,5 +1,6 @@
 import { SlackDetector } from './SlackDetector';
 import { BlockManager } from './BlockManager';
+import { InteractionManager } from './InteractionManager';
 
 /**
  * Main application class for Slack Focus Helper
@@ -7,6 +8,7 @@ import { BlockManager } from './BlockManager';
  */
 export class SlackFocusHelper {
   private blockManager: BlockManager | null = null;
+  private interactionManager: InteractionManager | null = null;
   private mutationObserver: MutationObserver | null = null;
 
   /**
@@ -35,6 +37,11 @@ export class SlackFocusHelper {
     // Initialize block manager
     this.blockManager = new BlockManager();
     await this.blockManager.initialize();
+
+    // Initialize interaction manager
+    this.interactionManager = new InteractionManager(this.blockManager);
+    this.interactionManager.setupEventListeners();
+    console.log('InteractionManager initialized and event listeners set up');
 
     // Set up DOM monitoring
     this.setupMutationObserver();
@@ -129,10 +136,17 @@ export class SlackFocusHelper {
   }
 
   /**
+   * Get the interaction manager instance
+   */
+  getInteractionManager(): InteractionManager | null {
+    return this.interactionManager;
+  }
+
+  /**
    * Check if the application is ready
    */
   isReady(): boolean {
-    return this.blockManager !== null;
+    return this.blockManager !== null && this.interactionManager !== null;
   }
 
   /**
@@ -145,6 +159,12 @@ export class SlackFocusHelper {
     if (this.mutationObserver) {
       this.mutationObserver.disconnect();
       this.mutationObserver = null;
+    }
+
+    // Cleanup interaction manager
+    if (this.interactionManager) {
+      this.interactionManager.removeEventListeners();
+      this.interactionManager = null;
     }
 
     // Cleanup block manager

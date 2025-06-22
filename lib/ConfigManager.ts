@@ -19,6 +19,12 @@ export class ConfigManager {
    */
   static async loadConfig(): Promise<Config> {
     try {
+      // Check if chrome.storage is available
+      if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
+        console.warn('Chrome storage API not available, using default config');
+        return DEFAULT_CONFIG;
+      }
+      
       const result = await chrome.storage.sync.get(this.STORAGE_KEY);
       if (result[this.STORAGE_KEY]) {
         return { ...DEFAULT_CONFIG, ...result[this.STORAGE_KEY] };
@@ -35,6 +41,12 @@ export class ConfigManager {
    */
   static async saveConfig(config: Config): Promise<void> {
     try {
+      // Check if chrome.storage is available
+      if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
+        console.warn('Chrome storage API not available, cannot save config');
+        return;
+      }
+      
       await chrome.storage.sync.set({
         [this.STORAGE_KEY]: config
       });

@@ -7,9 +7,11 @@ import { BlockManager } from './BlockManager';
 export class InteractionManager {
   private blockManager: BlockManager;
   private isSetup = false;
+  private boundHandleClick: (event: Event) => Promise<void>;
 
   constructor(blockManager: BlockManager) {
     this.blockManager = blockManager;
+    this.boundHandleClick = this.handleClick.bind(this);
   }
 
   /**
@@ -22,7 +24,10 @@ export class InteractionManager {
     }
 
     // Use event delegation to handle clicks on channels and sections
-    document.addEventListener('click', this.handleClick.bind(this), true);
+    // Use capture phase to ensure we intercept events before Slack handles them
+    document.addEventListener('click', this.boundHandleClick, true);
+    document.addEventListener('mousedown', this.boundHandleClick, true);
+    document.addEventListener('contextmenu', this.boundHandleClick, true);
     
     this.isSetup = true;
     console.log('InteractionManager: Event listeners set up');
@@ -34,7 +39,9 @@ export class InteractionManager {
   removeEventListeners(): void {
     if (!this.isSetup) return;
 
-    document.removeEventListener('click', this.handleClick.bind(this), true);
+    document.removeEventListener('click', this.boundHandleClick, true);
+    document.removeEventListener('mousedown', this.boundHandleClick, true);
+    document.removeEventListener('contextmenu', this.boundHandleClick, true);
     
     this.isSetup = false;
     console.log('InteractionManager: Event listeners removed');
@@ -43,23 +50,54 @@ export class InteractionManager {
   /**
    * Handle click events with Ctrl+click detection
    */
-  private async handleClick(event: MouseEvent): Promise<void> {
+  private async handleClick(event: Event): Promise<void> {
+    if (!(event instanceof MouseEvent)) {
+      return;
+    }
+    console.log('InteractionManager: Click event detected', {
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      button: event.button,
+      target: event.target
+    });
+
     // Only handle Ctrl+click events
     if (!event.ctrlKey && !event.metaKey) {
       return;
     }
 
+    console.log('InteractionManager: Ctrl+click detected, processing...');
+
+    // Prevent default behavior immediately
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
     const target = event.target as Element;
-    if (!target) return;
+    if (!target) {
+      console.log('InteractionManager: No target element found');
+      return;
+    }
 
     // Find the relevant channel or section element
     const channelElement = target.closest(SlackDetector.SELECTORS.channelItem);
     const sectionElement = target.closest(SlackDetector.SELECTORS.sectionHeading);
 
+    console.log('InteractionManager: Element detection', {
+      channelElement: !!channelElement,
+      sectionElement: !!sectionElement,
+      channelSelector: SlackDetector.SELECTORS.channelItem,
+      sectionSelector: SlackDetector.SELECTORS.sectionHeading
+    });
+
     if (channelElement) {
+      console.log('InteractionManager: Processing channel click');
       await this.handleChannelClick(event, channelElement);
     } else if (sectionElement) {
+      console.log('InteractionManager: Processing section click');
       await this.handleSectionClick(event, sectionElement);
+    } else {
+      console.log('InteractionManager: No matching element found for Ctrl+click');
     }
   }
 
