@@ -1,25 +1,15 @@
 import { StorageManager } from '../utils/storage';
 import { BlockLogic } from '../utils/blockLogic';
-import { BlockCheckResult } from '../types';
+import {
+  ExtensionMessage,
+  CheckBlockMessage,
+  CheckBlockResponse,
+  GetCurrentUrlResponse,
+  OpenSettingsResponse,
+  ExtensionMessageResponse
+} from '../types';
 
-type MessageType = 'CHECK_BLOCK' | 'GET_CURRENT_URL' | 'OPEN_SETTINGS';
-
-interface CheckBlockMessage {
-  type: 'CHECK_BLOCK';
-  url: string;
-}
-
-interface GetCurrentUrlMessage {
-  type: 'GET_CURRENT_URL';
-}
-
-interface OpenSettingsMessage {
-  type: 'OPEN_SETTINGS';
-}
-
-type ExtensionMessage = CheckBlockMessage | GetCurrentUrlMessage | OpenSettingsMessage;
-
-async function handleCheckBlock(message: CheckBlockMessage): Promise<BlockCheckResult> {
+async function handleCheckBlock(message: CheckBlockMessage): Promise<CheckBlockResponse> {
   if (!message.url || typeof message.url !== 'string') {
     console.warn('Invalid URL in CHECK_BLOCK message:', message.url);
     return { shouldBlock: false };
@@ -29,7 +19,7 @@ async function handleCheckBlock(message: CheckBlockMessage): Promise<BlockCheckR
   return BlockLogic.checkIfShouldBlock(message.url, sectionGroups);
 }
 
-async function handleGetCurrentUrl(): Promise<{ url: string | null }> {
+async function handleGetCurrentUrl(): Promise<GetCurrentUrlResponse> {
   console.log('Getting current URL...');
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   console.log('Found tabs:', tabs);
@@ -43,14 +33,22 @@ async function handleGetCurrentUrl(): Promise<{ url: string | null }> {
   return { url: null };
 }
 
-async function handleOpenSettings(): Promise<{ success: boolean; error?: string }> {
+async function handleOpenSettings(): Promise<OpenSettingsResponse> {
   console.log('Opening settings page...');
-  const popupUrl = browser.runtime.getURL('/popup.html');
-  await browser.tabs.create({ url: popupUrl });
-  return { success: true };
+  try {
+    const popupUrl = browser.runtime.getURL('/popup.html');
+    await browser.tabs.create({ url: popupUrl });
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to open settings:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
 }
 
-async function handleMessage(message: ExtensionMessage) {
+async function handleMessage(message: ExtensionMessage): Promise<ExtensionMessageResponse> {
   try {
     switch (message.type) {
       case 'CHECK_BLOCK':
@@ -60,7 +58,7 @@ async function handleMessage(message: ExtensionMessage) {
       case 'OPEN_SETTINGS':
         return await handleOpenSettings();
       default:
-        console.warn('Unknown message type:', (message as any).type);
+        console.warn('Unknown message type:', (message as ExtensionMessage & { type: string }).type);
         return null;
     }
   } catch (error) {
@@ -102,7 +100,7 @@ export default defineBackground(() => {
     }
   }
 
-  function buildBlockPageUrl(result: BlockCheckResult): string {
+  function buildBlockPageUrl(result: CheckBlockResponse): string {
     const baseUrl = `${browser.runtime.getURL('')}block.html`;
     const params = new URLSearchParams({
       group: result.groupName || '',

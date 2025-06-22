@@ -1,4 +1,5 @@
 import { SectionGroup, TimeBlock, BlockCheckResult } from '../types';
+import { TIME_FORMAT_REGEX } from './constants';
 
 export class BlockLogic {
   static isTimeInBlock(currentTime: string, timeBlock: TimeBlock): boolean {
@@ -60,7 +61,6 @@ export class BlockLogic {
   }
 
   static isValidTimeFormat(time: string): boolean {
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    return timeRegex.test(time);
+    return TIME_FORMAT_REGEX.test(time);
   }
 }

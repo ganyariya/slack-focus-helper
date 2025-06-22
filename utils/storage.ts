@@ -1,15 +1,17 @@
 import { StorageData, SectionGroup } from '../types';
-
-const STORAGE_KEY = 'sectionGroups';
+import { STORAGE_KEYS } from './constants';
+import { StorageError, logError } from './errorHandler';
 
 export class StorageManager {
   static async getAllSectionGroups(): Promise<Record<string, SectionGroup>> {
     try {
-      const result = await browser.storage.local.get(STORAGE_KEY);
-      return result[STORAGE_KEY] || {};
+      const result = await browser.storage.local.get(STORAGE_KEYS.SECTION_GROUPS);
+      return result[STORAGE_KEYS.SECTION_GROUPS] || {};
     } catch (error) {
-      console.error('Failed to get section groups:', error);
-      return {};
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'getAllSectionGroups'
+      });
+      throw new StorageError('Failed to get section groups', { originalError: error });
     }
   }
 
@@ -17,10 +19,14 @@ export class StorageManager {
     try {
       const allGroups = await this.getAllSectionGroups();
       allGroups[groupName] = group;
-      await browser.storage.local.set({ [STORAGE_KEY]: allGroups });
+      await browser.storage.local.set({ [STORAGE_KEYS.SECTION_GROUPS]: allGroups });
       return true;
     } catch (error) {
-      console.error('Failed to save section group:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'saveSectionGroup',
+        groupName,
+        group
+      });
       return false;
     }
   }
@@ -29,10 +35,13 @@ export class StorageManager {
     try {
       const allGroups = await this.getAllSectionGroups();
       delete allGroups[groupName];
-      await browser.storage.local.set({ [STORAGE_KEY]: allGroups });
+      await browser.storage.local.set({ [STORAGE_KEYS.SECTION_GROUPS]: allGroups });
       return true;
     } catch (error) {
-      console.error('Failed to delete section group:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'deleteSectionGroup',
+        groupName
+      });
       return false;
     }
   }
@@ -42,7 +51,10 @@ export class StorageManager {
       const allGroups = await this.getAllSectionGroups();
       return allGroups[groupName] || null;
     } catch (error) {
-      console.error('Failed to get section group:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'getSectionGroup',
+        groupName
+      });
       return null;
     }
   }
@@ -51,11 +63,12 @@ export class StorageManager {
     try {
       const existing = await this.getAllSectionGroups();
       if (Object.keys(existing).length === 0) {
-        // Initialize with empty data structure
-        await browser.storage.local.set({ [STORAGE_KEY]: {} });
+        await browser.storage.local.set({ [STORAGE_KEYS.SECTION_GROUPS]: {} });
       }
     } catch (error) {
-      console.error('Failed to initialize storage:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'initializeStorage'
+      });
     }
   }
 
@@ -64,7 +77,6 @@ export class StorageManager {
       const group = await this.getSectionGroup(groupName);
       if (!group) return false;
 
-      // Check for duplicates
       if (group.urls.includes(url)) {
         return false;
       }
@@ -72,7 +84,11 @@ export class StorageManager {
       group.urls.push(url);
       return await this.saveSectionGroup(groupName, group);
     } catch (error) {
-      console.error('Failed to add URL to group:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'addUrlToGroup',
+        groupName,
+        url
+      });
       return false;
     }
   }
@@ -85,7 +101,11 @@ export class StorageManager {
       group.urls = group.urls.filter(u => u !== url);
       return await this.saveSectionGroup(groupName, group);
     } catch (error) {
-      console.error('Failed to remove URL from group:', error);
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'removeUrlFromGroup',
+        groupName,
+        url
+      });
       return false;
     }
   }

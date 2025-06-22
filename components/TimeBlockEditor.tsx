@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TimeBlock } from '../types';
 import { BlockLogic } from '../utils/blockLogic';
 import { isTimeOverlapping, isValidTimeRange, sortTimeBlocksByStart } from '../utils/timeUtils';
+import { DEFAULT_TIME_BLOCKS } from '../utils/constants';
 
 interface TimeBlockEditorProps {
   timeBlocks: TimeBlock[];
@@ -9,8 +10,8 @@ interface TimeBlockEditorProps {
 }
 
 export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEditorProps) {
-  const [newStart, setNewStart] = useState('09:00');
-  const [newEnd, setNewEnd] = useState('17:00');
+  const [newStart, setNewStart] = useState<string>(DEFAULT_TIME_BLOCKS.START);
+  const [newEnd, setNewEnd] = useState<string>(DEFAULT_TIME_BLOCKS.END);
   const [error, setError] = useState('');
 
   const addTimeBlock = () => {
@@ -40,8 +41,8 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
     const updatedBlocks = sortTimeBlocksByStart([...timeBlocks, newBlock]);
 
     onTimeBlocksChange(updatedBlocks);
-    setNewStart('09:00');
-    setNewEnd('17:00');
+    setNewStart(DEFAULT_TIME_BLOCKS.START);
+    setNewEnd(DEFAULT_TIME_BLOCKS.END);
   };
 
   const removeTimeBlock = (index: number) => {

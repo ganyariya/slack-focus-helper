@@ -1,18 +1,11 @@
-interface BlockCheckResponse {
-  shouldBlock: boolean;
-  groupName?: string;
-  currentTime?: string;
-  matchedUrl?: string;
-}
+import { CheckBlockResponse } from '../types';
+import { BLOCKED_URL_PREFIXES, URL_MONITORING } from '../utils/constants';
 
 function shouldSkipUrl(url: string): boolean {
-  return !url || 
-         url.startsWith('chrome://') || 
-         url.startsWith('moz-extension://') ||
-         url.startsWith('chrome-extension://');
+  return !url || BLOCKED_URL_PREFIXES.some(prefix => url.startsWith(prefix));
 }
 
-function buildBlockPageUrl(response: BlockCheckResponse): string {
+function buildBlockPageUrl(response: CheckBlockResponse): string {
   const baseUrl = `${browser.runtime.getURL('')}block.html`;
   const params = new URLSearchParams({
     group: response.groupName || '',
@@ -39,10 +32,10 @@ export default defineContentScript({
       isChecking = true;
 
       try {
-        const response: BlockCheckResponse = await browser.runtime.sendMessage({
+        const response = await browser.runtime.sendMessage({
           type: 'CHECK_BLOCK',
           url: currentUrl
-        });
+        }) as CheckBlockResponse;
 
         if (response?.shouldBlock) {
           const blockPageUrl = buildBlockPageUrl(response);
@@ -65,17 +58,17 @@ export default defineContentScript({
 
     function setupEventListeners(): void {
       window.addEventListener('popstate', () => {
-        setTimeout(monitorUrlChanges, 100);
+        setTimeout(monitorUrlChanges, URL_MONITORING.EVENT_DELAY);
       });
 
       window.addEventListener('hashchange', () => {
-        setTimeout(monitorUrlChanges, 100);
+        setTimeout(monitorUrlChanges, URL_MONITORING.EVENT_DELAY);
       });
     }
 
     function setupMutationObserver(): void {
       const observer = new MutationObserver(() => {
-        setTimeout(monitorUrlChanges, 100);
+        setTimeout(monitorUrlChanges, URL_MONITORING.EVENT_DELAY);
       });
 
       const startObserving = () => {
@@ -99,7 +92,7 @@ export default defineContentScript({
     }
 
     function startPeriodicCheck(): void {
-      setInterval(monitorUrlChanges, 1000);
+      setInterval(monitorUrlChanges, URL_MONITORING.POLLING_INTERVAL);
     }
 
     checkAndBlock();

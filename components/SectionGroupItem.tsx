@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SectionGroup } from '../types';
+import { SectionGroup, TimeBlock } from '../types';
 import { BlockLogic } from '../utils/blockLogic';
 import { TimeBlockEditor } from './TimeBlockEditor';
 
@@ -12,7 +12,7 @@ interface SectionGroupItemProps {
   onRename: (oldName: string, newName: string) => void;
   onAddCurrentUrl: (groupName: string) => void;
   onRemoveUrl: (groupName: string, url: string) => void;
-  onUpdateTimeBlocks: (groupName: string, timeBlocks: any[]) => void;
+  onUpdateTimeBlocks: (groupName: string, timeBlocks: TimeBlock[]) => void;
 }
 
 export function SectionGroupItem({
