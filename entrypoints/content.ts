@@ -1,3 +1,27 @@
+interface BlockCheckResponse {
+  shouldBlock: boolean;
+  groupName?: string;
+  currentTime?: string;
+  matchedUrl?: string;
+}
+
+function shouldSkipUrl(url: string): boolean {
+  return !url || 
+         url.startsWith('chrome://') || 
+         url.startsWith('moz-extension://') ||
+         url.startsWith('chrome-extension://');
+}
+
+function buildBlockPageUrl(response: BlockCheckResponse): string {
+  const baseUrl = `${browser.runtime.getURL('')}block.html`;
+  const params = new URLSearchParams({
+    group: response.groupName || '',
+    time: response.currentTime || '',
+    url: response.matchedUrl || ''
+  });
+  return `${baseUrl}?${params.toString()}`;
+}
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_start',
@@ -7,41 +31,31 @@ export default defineContentScript({
     let currentUrl = location.href;
     let isChecking = false;
 
-    async function checkAndBlock() {
-      if (isChecking) return;
-      if (!currentUrl || currentUrl.startsWith('chrome://') || currentUrl.startsWith('moz-extension://')) {
-        return; // Skip internal browser pages
+    async function checkAndBlock(): Promise<void> {
+      if (isChecking || shouldSkipUrl(currentUrl)) {
+        return;
       }
       
       isChecking = true;
 
       try {
-        const response = await browser.runtime.sendMessage({
+        const response: BlockCheckResponse = await browser.runtime.sendMessage({
           type: 'CHECK_BLOCK',
           url: currentUrl
         });
 
-        if (response && response.shouldBlock) {
-          const blockPageUrl = `${browser.runtime.getURL('')}block.html` + 
-            `?group=${encodeURIComponent(response.groupName || '')}` +
-            `&time=${encodeURIComponent(response.currentTime || '')}` +
-            `&url=${encodeURIComponent(response.matchedUrl || '')}`;
-          
+        if (response?.shouldBlock) {
+          const blockPageUrl = buildBlockPageUrl(response);
           location.href = blockPageUrl;
         }
       } catch (error) {
         console.error('Error checking block status:', error);
-        // Don't block on error - fail open for better user experience
       } finally {
         isChecking = false;
       }
     }
 
-    // Initial check
-    checkAndBlock();
-
-    // Monitor URL changes for SPAs
-    function monitorUrlChanges() {
+    function monitorUrlChanges(): void {
       const newUrl = location.href;
       if (newUrl !== currentUrl) {
         currentUrl = newUrl;
@@ -49,42 +63,49 @@ export default defineContentScript({
       }
     }
 
-    // History API監視 (popstate events)
-    window.addEventListener('popstate', () => {
-      setTimeout(monitorUrlChanges, 100);
-    });
-
-    // Hash change監視 (hashchange events)
-    window.addEventListener('hashchange', () => {
-      setTimeout(monitorUrlChanges, 100);
-    });
-
-    // DOM mutation監視
-    const observer = new MutationObserver(() => {
-      setTimeout(monitorUrlChanges, 100);
-    });
-
-    // Start observing when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
+    function setupEventListeners(): void {
+      window.addEventListener('popstate', () => {
+        setTimeout(monitorUrlChanges, 100);
       });
-    } else {
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
+
+      window.addEventListener('hashchange', () => {
+        setTimeout(monitorUrlChanges, 100);
       });
     }
 
-    // 定期的なURL変更チェック (1秒間隔)
-    setInterval(monitorUrlChanges, 1000);
+    function setupMutationObserver(): void {
+      const observer = new MutationObserver(() => {
+        setTimeout(monitorUrlChanges, 100);
+      });
 
-    // Cleanup on unload
-    window.addEventListener('beforeunload', () => {
-      observer.disconnect();
-    });
+      const startObserving = () => {
+        if (document.body) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startObserving);
+      } else {
+        startObserving();
+      }
+
+      window.addEventListener('beforeunload', () => {
+        observer.disconnect();
+      });
+    }
+
+    function startPeriodicCheck(): void {
+      setInterval(monitorUrlChanges, 1000);
+    }
+
+    checkAndBlock();
+    setupEventListeners();
+    setupMutationObserver();
+    startPeriodicCheck();
+
   },
 });

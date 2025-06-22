@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TimeBlock } from '../types';
 import { BlockLogic } from '../utils/blockLogic';
+import { isTimeOverlapping, isValidTimeRange, sortTimeBlocksByStart } from '../utils/timeUtils';
 
 interface TimeBlockEditorProps {
   timeBlocks: TimeBlock[];
@@ -21,42 +22,22 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
       return;
     }
 
-    // Validate start < end
-    const [startHour, startMin] = newStart.split(':').map(Number);
-    const [endHour, endMin] = newEnd.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-
-    if (startMinutes >= endMinutes) {
+    if (!isValidTimeRange(newStart, newEnd)) {
       setError('終了時刻は開始時刻より後にしてください');
       return;
     }
 
-    // Check for overlaps
-    const newBlock = { start: newStart, end: newEnd };
-    const hasOverlap = timeBlocks.some(block => {
-      const [blockStartHour, blockStartMin] = block.start.split(':').map(Number);
-      const [blockEndHour, blockEndMin] = block.end.split(':').map(Number);
-      const blockStartMinutes = blockStartHour * 60 + blockStartMin;
-      const blockEndMinutes = blockEndHour * 60 + blockEndMin;
-
-      return (
-        (startMinutes >= blockStartMinutes && startMinutes < blockEndMinutes) ||
-        (endMinutes > blockStartMinutes && endMinutes <= blockEndMinutes) ||
-        (startMinutes <= blockStartMinutes && endMinutes >= blockEndMinutes)
-      );
-    });
+    const hasOverlap = timeBlocks.some(block => 
+      isTimeOverlapping(newStart, newEnd, block.start, block.end)
+    );
 
     if (hasOverlap) {
       setError('時間が重複しています');
       return;
     }
 
-    const updatedBlocks = [...timeBlocks, newBlock].sort((a, b) => {
-      const [aHour, aMin] = a.start.split(':').map(Number);
-      const [bHour, bMin] = b.start.split(':').map(Number);
-      return (aHour * 60 + aMin) - (bHour * 60 + bMin);
-    });
+    const newBlock = { start: newStart, end: newEnd };
+    const updatedBlocks = sortTimeBlocksByStart([...timeBlocks, newBlock]);
 
     onTimeBlocksChange(updatedBlocks);
     setNewStart('09:00');
@@ -86,14 +67,8 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
     const updatedBlocks = [...timeBlocks];
     updatedBlocks[index] = { ...updatedBlocks[index], [field]: value };
 
-    // Validate start < end for this block
     const block = updatedBlocks[index];
-    const [startHour, startMin] = block.start.split(':').map(Number);
-    const [endHour, endMin] = block.end.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-
-    if (startMinutes >= endMinutes) {
+    if (!isValidTimeRange(block.start, block.end)) {
       setError('終了時刻は開始時刻より後にしてください');
       return;
     }
