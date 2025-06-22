@@ -11,6 +11,8 @@ function App() {
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [newGroupName, setNewGroupName] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
 
   useEffect(() => {
     loadData();
@@ -116,6 +118,55 @@ function App() {
     }
   };
 
+  const startEditingGroup = (groupName: string) => {
+    setEditingGroup(groupName);
+    setEditingName(groupName);
+  };
+
+  const cancelEditingGroup = () => {
+    setEditingGroup(null);
+    setEditingName('');
+  };
+
+  const saveGroupName = async () => {
+    if (!editingGroup || !editingName.trim() || editingName === editingGroup) {
+      cancelEditingGroup();
+      return;
+    }
+
+    // Check if new name already exists
+    if (sectionGroups[editingName]) {
+      alert('このグループ名は既に存在します');
+      return;
+    }
+
+    const group = sectionGroups[editingGroup];
+    if (!group) {
+      cancelEditingGroup();
+      return;
+    }
+
+    // Create new group with new name
+    const updatedGroup = { ...group, name: editingName };
+    const saveSuccess = await StorageManager.saveSectionGroup(editingName, updatedGroup);
+    
+    if (saveSuccess) {
+      // Delete old group
+      const deleteSuccess = await StorageManager.deleteSectionGroup(editingGroup);
+      
+      if (deleteSuccess) {
+        setSectionGroups(prev => {
+          const updated = { ...prev };
+          delete updated[editingGroup];
+          updated[editingName] = updatedGroup;
+          return updated;
+        });
+      }
+    }
+
+    cancelEditingGroup();
+  };
+
   const runTests = async () => {
     await TestScenarios.runAllTests();
     await loadData(); // Reload data after tests
@@ -161,14 +212,52 @@ function App() {
           return (
             <div key={groupName} className="section-group">
               <div className="group-header">
-                <h3>{groupName}</h3>
-                <button 
-                  className="delete-btn"
-                  onClick={() => deleteGroup(groupName)}
-                  title="グループを削除"
-                >
-                  🗑️
-                </button>
+                {editingGroup === groupName ? (
+                  <div className="group-name-editor">
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') saveGroupName();
+                        if (e.key === 'Escape') cancelEditingGroup();
+                      }}
+                      className="group-name-input"
+                      autoFocus
+                    />
+                    <button 
+                      className="save-btn"
+                      onClick={saveGroupName}
+                      title="保存"
+                    >
+                      ✓
+                    </button>
+                    <button 
+                      className="cancel-btn"
+                      onClick={cancelEditingGroup}
+                      title="キャンセル"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 
+                      onClick={() => startEditingGroup(groupName)}
+                      className="group-name-clickable"
+                      title="クリックして編集"
+                    >
+                      {groupName}
+                    </h3>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => deleteGroup(groupName)}
+                      title="グループを削除"
+                    >
+                      🗑️
+                    </button>
+                  </>
+                )}
               </div>
               
               <div className={`status ${status.className}`}>
