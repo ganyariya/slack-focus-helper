@@ -126,18 +126,42 @@ export class BlockManager {
   }
 
   /**
-   * Hide an element using CSS
+   * Hide an element using CSS and inline styles
    */
   private hideElement(element: Element): void {
     element.classList.add('slack-focus-helper-hidden');
+    // Add inline styles as backup to ensure hiding
+    const htmlElement = element as HTMLElement;
+    htmlElement.style.setProperty('display', 'none', 'important');
+    htmlElement.style.setProperty('visibility', 'hidden', 'important');
+    htmlElement.style.setProperty('opacity', '0', 'important');
+    htmlElement.style.setProperty('height', '0', 'important');
+    htmlElement.style.setProperty('width', '0', 'important');
+    htmlElement.style.setProperty('margin', '0', 'important');
+    htmlElement.style.setProperty('padding', '0', 'important');
+    htmlElement.style.setProperty('pointer-events', 'none', 'important');
+    htmlElement.style.setProperty('position', 'absolute', 'important');
+    htmlElement.style.setProperty('left', '-9999px', 'important');
     this.injectHideCSS();
   }
 
   /**
-   * Show an element by removing the hide class
+   * Show an element by removing the hide class and inline styles
    */
   private showElement(element: Element): void {
     element.classList.remove('slack-focus-helper-hidden');
+    // Remove inline styles that might have been added
+    const htmlElement = element as HTMLElement;
+    htmlElement.style.removeProperty('display');
+    htmlElement.style.removeProperty('visibility');
+    htmlElement.style.removeProperty('opacity');
+    htmlElement.style.removeProperty('height');
+    htmlElement.style.removeProperty('width');
+    htmlElement.style.removeProperty('margin');
+    htmlElement.style.removeProperty('padding');
+    htmlElement.style.removeProperty('pointer-events');
+    htmlElement.style.removeProperty('position');
+    htmlElement.style.removeProperty('left');
   }
 
   /**
@@ -168,6 +192,17 @@ export class BlockManager {
     style.textContent = `
       .slack-focus-helper-hidden {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
       }
       
       .slack-focus-helper-block-feedback {
