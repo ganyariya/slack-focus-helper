@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { SectionGroup } from '../../types';
+import { SectionGroup, TimeBlock } from '../../types';
 import { StorageManager } from '../../utils/storage';
 import { BlockLogic } from '../../utils/blockLogic';
+import { TimeBlockEditor } from '../../components/TimeBlockEditor';
+import { TestScenarios } from '../../utils/testScenarios';
 import './App.css';
 
 function App() {
@@ -103,6 +105,30 @@ function App() {
     }
   };
 
+  const updateTimeBlocks = async (groupName: string, timeBlocks: TimeBlock[]) => {
+    const group = sectionGroups[groupName];
+    if (!group) return;
+
+    const updatedGroup = { ...group, timeBlocks };
+    const success = await StorageManager.saveSectionGroup(groupName, updatedGroup);
+    if (success) {
+      setSectionGroups(prev => ({ ...prev, [groupName]: updatedGroup }));
+    }
+  };
+
+  const runTests = async () => {
+    await TestScenarios.runAllTests();
+    await loadData(); // Reload data after tests
+  };
+
+  const createTestData = async () => {
+    await TestScenarios.createTestData();
+    await loadData(); // Reload data after creating test data
+  };
+
+  // Check if we're in development mode
+  const isDevelopment = import.meta.env.DEV;
+
   const getGroupStatus = (group: SectionGroup) => {
     if (!group.enabled) return { text: '無効', className: 'status-disabled' };
     
@@ -158,6 +184,11 @@ function App() {
                 有効
               </label>
 
+              <TimeBlockEditor
+                timeBlocks={group.timeBlocks}
+                onTimeBlocksChange={(timeBlocks) => updateTimeBlocks(groupName, timeBlocks)}
+              />
+
               <div className="urls-section">
                 <div className="urls-header">
                   <span>URL: ({group.urls.length}個)</span>
@@ -208,6 +239,20 @@ function App() {
           </button>
         </div>
       </div>
+
+      {isDevelopment && (
+        <div className="dev-tools">
+          <h3>開発ツール</h3>
+          <div className="dev-buttons">
+            <button onClick={createTestData} className="dev-btn">
+              テストデータ作成
+            </button>
+            <button onClick={runTests} className="dev-btn">
+              テスト実行
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

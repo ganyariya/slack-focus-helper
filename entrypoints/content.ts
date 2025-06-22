@@ -9,6 +9,10 @@ export default defineContentScript({
 
     async function checkAndBlock() {
       if (isChecking) return;
+      if (!currentUrl || currentUrl.startsWith('chrome://') || currentUrl.startsWith('moz-extension://')) {
+        return; // Skip internal browser pages
+      }
+      
       isChecking = true;
 
       try {
@@ -27,6 +31,7 @@ export default defineContentScript({
         }
       } catch (error) {
         console.error('Error checking block status:', error);
+        // Don't block on error - fail open for better user experience
       } finally {
         isChecking = false;
       }

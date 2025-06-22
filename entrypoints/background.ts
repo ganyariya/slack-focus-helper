@@ -12,6 +12,11 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.type === 'CHECK_BLOCK') {
       try {
+        if (!message.url || typeof message.url !== 'string') {
+          console.warn('Invalid URL in CHECK_BLOCK message:', message.url);
+          return { shouldBlock: false };
+        }
+
         const sectionGroups = await StorageManager.getAllSectionGroups();
         const result: BlockCheckResult = BlockLogic.checkIfShouldBlock(message.url, sectionGroups);
         

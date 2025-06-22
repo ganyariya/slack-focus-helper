@@ -258,3 +258,150 @@
   background: #6c757d;
   cursor: not-allowed;
 }
+
+/* Time Block Editor Styles */
+.time-block-editor {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.time-blocks-header {
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.time-blocks-list {
+  margin-bottom: 1rem;
+}
+
+.time-block-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.time-input {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  width: 80px;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.time-separator {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.remove-time-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  margin-left: auto;
+}
+
+.remove-time-btn:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.remove-time-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.add-time-block {
+  border-top: 1px solid #e9ecef;
+  padding-top: 0.5rem;
+}
+
+.add-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.add-time-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.add-time-btn:hover {
+  background: #218838;
+}
+
+.time-error {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+/* Development Tools Styles */
+.dev-tools {
+  padding: 1rem;
+  background: #fff3cd;
+  border-top: 2px solid #ffeaa7;
+  margin-top: 1rem;
+}
+
+.dev-tools h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #856404;
+}
+
+.dev-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dev-btn {
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 600;
+}
+
+.dev-btn:hover {
+  background: #e0a800;
+}
