@@ -10,12 +10,27 @@ document.getElementById('current-time').textContent = currentTime;
 document.getElementById('blocked-url').textContent = blockedUrl;
 
 // 設定リンクをポップアップに設定
-document.getElementById('settings-link').addEventListener('click', (e) => {
+document.getElementById('settings-link').addEventListener('click', async (e) => {
     e.preventDefault();
-    if (chrome && chrome.runtime) {
-        chrome.runtime.openOptionsPage?.() || 
-        chrome.tabs?.create({ url: chrome.runtime.getURL('popup.html') }) ||
-        window.close();
+    try {
+        if (browser && browser.runtime) {
+            // Background scriptに設定画面を開くよう要求
+            const response = await browser.runtime.sendMessage({ 
+                type: 'OPEN_SETTINGS' 
+            });
+            
+            if (!response?.success) {
+                throw new Error(response?.error || 'Failed to open settings');
+            }
+        }
+    } catch (error) {
+        console.log('Failed to open settings:', error);
+        // フォールバック：現在のタブでポップアップページを開く
+        try {
+            window.location.href = browser.runtime.getURL('popup.html');
+        } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+        }
     }
 });
 

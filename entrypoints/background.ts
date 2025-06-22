@@ -43,6 +43,18 @@ export default defineBackground(() => {
         return { url: null };
       }
     }
+
+    if (message.type === 'OPEN_SETTINGS') {
+      try {
+        console.log('Opening settings page...');
+        const popupUrl = browser.runtime.getURL('/popup.html');
+        await browser.tabs.create({ url: popupUrl });
+        return { success: true };
+      } catch (error) {
+        console.error('Error opening settings:', error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    }
   });
 
   // Handle tab updates to check for blocking
