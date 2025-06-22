@@ -5,13 +5,7 @@ import { WorkspaceConfig, TimeBlock } from '../../types/config';
 import { MainPopup } from './components/MainPopup';
 import { DetailedSettings } from './components/DetailedSettings';
 
-declare global {
-  namespace chrome {
-    namespace tabs {
-      function query(queryInfo: {active: boolean; currentWindow: boolean}): Promise<{url?: string}[]>;
-    }
-  }
-}
+// WXT provides browser API types
 
 type Page = 'main' | 'details';
 
@@ -30,14 +24,16 @@ function App() {
   const initializePopup = async () => {
     try {
       // Get workspace name from active tab
-      if (typeof chrome !== 'undefined' && chrome.tabs) {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        const activeTab = tabs[0];
-        
-        if (activeTab?.url?.includes('slack.com')) {
-          // Extract workspace name from URL or use stored value
-          const urlMatch = activeTab.url.match(/https:\/\/([^.]+)\.slack\.com/);
-          const workspace = urlMatch ? urlMatch[1] : 'default';
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      const activeTab = tabs[0];
+      
+      if (activeTab?.url?.includes('slack.com')) {
+        try {
+          // Try to get workspace name from content script
+          const results = await browser.tabs.sendMessage(activeTab.id!, { 
+            action: 'getWorkspaceName' 
+          });
+          const workspace = results?.workspaceName || 'default';
           setWorkspaceName(workspace);
           
           // Load configuration
@@ -47,15 +43,21 @@ function App() {
           // Set blocked counts
           setBlockedChannelCount(workspaceConfig.blockedChannels.length);
           setBlockedSectionCount(workspaceConfig.blockedSections.length);
-        } else {
-          setWorkspaceName('Not on Slack');
-          const workspaceConfig = await ConfigManager.getWorkspaceConfig('default');
+        } catch (messageError) {
+          // Fallback to URL extraction if content script is not available
+          console.warn('Could not get workspace name from content script:', messageError);
+          const urlMatch = activeTab.url.match(/https:\/\/([^.]+)\.slack\.com/);
+          const workspace = urlMatch ? urlMatch[1] : 'default';
+          setWorkspaceName(workspace);
+          
+          const workspaceConfig = await ConfigManager.getWorkspaceConfig(workspace);
           setConfig(workspaceConfig);
+          setBlockedChannelCount(workspaceConfig.blockedChannels.length);
+          setBlockedSectionCount(workspaceConfig.blockedSections.length);
         }
       } else {
-        // Fallback for development
-        setWorkspaceName('Development');
-        const workspaceConfig = await ConfigManager.getWorkspaceConfig('development');
+        setWorkspaceName('Not on Slack');
+        const workspaceConfig = await ConfigManager.getWorkspaceConfig('default');
         setConfig(workspaceConfig);
       }
     } catch (error) {
