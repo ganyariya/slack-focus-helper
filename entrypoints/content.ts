@@ -1,10 +1,13 @@
 import { SlackDetector } from '../lib/SlackDetector';
+import { BlockManager } from '../lib/BlockManager';
 
 export default defineContentScript({
   matches: ['*://*.slack.com/*'],
   main() {
     console.log('Slack Focus Helper: Content script loaded');
     
+    let blockManager: BlockManager | null = null;
+
     // Check if we're on a Slack page
     const isSlackPage = (): boolean => {
       return window.location.hostname.endsWith('.slack.com') && 
@@ -27,7 +30,7 @@ export default defineContentScript({
     };
 
     // Set up DOM mutation observer
-    const setupMutationObserver = (): void => {
+    const setupMutationObserver = (blockManager: BlockManager): void => {
       const targetNode = document.querySelector(SlackDetector.SELECTORS.sidebar);
       if (!targetNode) {
         console.warn('Slack sidebar not found for mutation observation');
@@ -59,8 +62,8 @@ export default defineContentScript({
         });
 
         if (shouldUpdate) {
-          console.log('Slack DOM updated, refreshing channel/section detection');
-          // TODO: Refresh blocking state for new/changed elements
+          console.log('Slack DOM updated, refreshing blocking state');
+          blockManager.refreshBlocks();
         }
       });
 
@@ -74,7 +77,7 @@ export default defineContentScript({
     };
 
     // Initialize when Slack is ready
-    waitForSlackLoad().then(() => {
+    waitForSlackLoad().then(async () => {
       console.log('Slack Focus Helper: Ready to start blocking');
       
       // Get workspace name
@@ -83,6 +86,7 @@ export default defineContentScript({
         console.log(`Detected workspace: ${workspaceName}`);
       } else {
         console.warn('Could not detect workspace name');
+        return;
       }
 
       // Get initial channels and sections
@@ -90,10 +94,21 @@ export default defineContentScript({
       const sections = SlackDetector.getSections();
       console.log(`Found ${channels.length} channels and ${sections.length} sections`);
 
-      // Set up mutation observer for dynamic content updates
-      setupMutationObserver();
+      // Initialize block manager
+      blockManager = new BlockManager();
+      await blockManager.initialize();
 
-      // TODO: Initialize main blocking functionality
+      // Set up mutation observer for dynamic content updates
+      setupMutationObserver(blockManager);
+
+      console.log('Slack Focus Helper: Initialization complete');
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (blockManager) {
+        blockManager.cleanup();
+      }
     });
   },
 });
