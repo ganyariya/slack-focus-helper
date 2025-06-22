@@ -1,93 +1,126 @@
 # CLAUDE.md
 
-このファイルは、Claude Code (claude.ai/code) がこのリポジトリでコードを扱う際のガイダンスを提供します。
-
-## 必読ドキュメント
-
-- **Spec.md**: プロジェクトの詳細仕様を記載。コード作業前に必ず読み込むこと
-- **TASK.md**: 現在のタスクと作業内容について記載。タスクに関する質問がある場合は必ず参照すること
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## プロジェクト概要
 
-WXTフレームワークで構築されたChrome拡張機能で、指定した時間帯にSlackの気が散るチャンネルやセクションを非表示にすることで、ユーザーの集中力向上を支援します。ワークスペース固有の設定と時間ベースのコンテンツフィルタリング機能を提供します。
+このプロジェクトは、WXTフレームワークで構築された「Slack Focus Helper」ブラウザ拡張機能です。集中時間中にSlackで気が散るチャンネルやセクションを一時的に非表示にし、生産性を向上させることを目的としています。
 
 ## 開発コマンド
 
-```bash
-# 開発環境（Chrome）
-npm run dev
-
-# 開発環境（Firefox）
-npm run dev:firefox
-
-# プロダクションビルド
-npm run build
-npm run build:firefox
-
-# 拡張機能パッケージ化
-npm run zip
-npm run zip:firefox
-
-# 型チェック
-npm run compile
-
-# WXT環境セットアップ
-npm run postinstall
-```
+- `npm run dev` - Chrome用開発サーバーをホットリロードで起動
+- `npm run dev:firefox` - Firefox用開発サーバーを起動
+- `npm run build` - Chrome用本番ビルド
+- `npm run build:firefox` - Firefox用本番ビルド
+- `npm run zip` - Chrome Web Store用ZIPファイル作成
+- `npm run zip:firefox` - Firefox Add-ons用ZIPファイル作成
+- `npm run compile` - TypeScriptの型チェック（出力なし）
+- `npm install` - 依存関係のインストール（自動的に `wxt prepare` も実行）
 
 ## アーキテクチャ
 
-### 技術スタック
-- **フレームワーク**: WXT (Web Extension Tools)
-- **言語**: TypeScript
-- **UI**: React（設定ページのみ）
-- **対象**: Slack Webアプリ（*://*.slack.com/*）
+WXTベースのブラウザ拡張機能：
 
-### プロジェクト構造
+- **フレームワーク**: WXT（Web Extension Tools）+ React
+- **言語**: TypeScript with React JSX
+- **エントリーポイント**:
+  - `entrypoints/background.ts` - Chrome拡張機能のサービスワーカー
+  - `entrypoints/content.ts` - Webページ上で実行されるコンテンツスクリプト
+  - `entrypoints/popup/` - 拡張機能ポップアップUI（React製）
+- **対象**: Slack Webアプリケーション（*.slack.com）
+
+## 主要機能（SPEC.mdより）
+
+### 基本機能
+
+1. **時間ベースブロック**
+   - 指定した時間帯のみブロック機能を有効化
+   - 複数の時間帯設定可能（例: 10:00-12:00, 14:00-18:00）
+   - 設定時間外はブロック対象でも表示
+
+2. **チャンネルブロック**
+   - パブリックチャンネル、プライベートチャンネル、DM、アプリ連携チャンネルの個別非表示
+   - Ctrl+クリックでブロック/解除を切り替え
+   - ブロック時に一時的な暗転エフェクトで視覚フィードバック
+
+3. **セクションブロック**
+   - セクション全体の非表示（スター付き、チャンネル、DM、App等）
+   - セクションヘッダーをCtrl+クリックでブロック切り替え
+   - セクション内の全チャンネルも自動的に非表示
+
+4. **ワークスペース別設定**
+   - ワークスペースごとに独立した設定
+   - ワークスペース名を自動取得して設定を分離
+
+### 高度な機能
+
+1. **強制モード**
+   - 直接URL指定でのアクセスもブロック
+   - ブロック対象チャンネルへの直接アクセス時に専用ブロック画面を表示
+
+2. **ブロック管理UI**
+   - 設定画面でのブロック中チャンネル・セクション一覧表示
+   - 個別解除・一括解除ボタン
+   - トースト通知による操作フィードバック
+
+## 技術仕様
+
+### データ構造
+```typescript
+interface Config {
+  workspaces: Record<string, WorkspaceConfig>;
+  globalSettings: GlobalSettings;
+}
+
+interface WorkspaceConfig {
+  timeBlocks: TimeBlock[];
+  blockedChannels: string[];
+  blockedSections: string[];
+  enabled: boolean;
+}
+
+interface TimeBlock {
+  start: string;    // "HH:MM"
+  end: string;      // "HH:MM"
+  enabled: boolean;
+}
 ```
-entrypoints/
-├── background.ts          # サービスワーカー/バックグラウンドスクリプト
-├── content.ts            # Slack操作用メインコンテンツスクリプト
-└── popup/               # ReactベースのポップアップUI
-    ├── App.tsx
-    ├── main.tsx
-    └── index.html
+
+### 主要セレクタ
+```typescript
+const SELECTORS = {
+  workspaceName: '.p-ia4_sidebar_header__title--inner .p-ia4_home_header_menu__team_name',
+  channelItem: '.p-channel_sidebar__channel',
+  channelName: '.p-channel_sidebar__name',
+  sectionHeading: '.p-channel_sidebar__section_heading',
+  sidebar: '.p-channel_sidebar'
+};
 ```
 
-### 主要概念
+### 主要クラス設計
+- `SlackChannelBlocker` - メイン制御クラス
+- `ConfigManager` - 設定管理
+- `UIManager` - UI管理
 
-**ワークスペース固有設定**: 各Slackワークスペース（例：company.slack.com）は完全に独立した設定を持ちます。設定はワークスペース別に保存され、ユーザーがワークスペース間を移動する際に自動的に切り替わります。
+## 技術的特徴
 
-**時間ベースブロッキング**: ユーザーは1日に複数の時間帯を設定でき、曜日ごとに異なるスケジュールを構成できます。アクティブな時間帯中は、指定されたチャンネルとセクションがSlackサイドバーから非表示になります。
+- Chrome Storage APIによる設定の永続化
+- DOM操作によるSlackサイドバー要素の表示/非表示制御
+- MutationObserverによる動的コンテンツ更新の監視
+- カスタムCSS注入による視覚エフェクト
+- Ctrl+クリックイベントハンドリング
 
-**DOM操作**: 拡張機能はコンテンツスクリプトを使用してSlackのDOM構造を操作し、現在時刻とワークスペース固有の設定に基づいて要素を非表示/表示します。
+## ファイル構成
 
-## 設定管理
+- `wxt.config.ts` - WXTフレームワーク設定
+- `entrypoints/` - 拡張機能エントリーポイント
+- `SPEC.md` - 詳細な日本語仕様書
+- `tsconfig.json` - TypeScript設定（WXTデフォルトを拡張）
 
-設定はワークスペース分離でChromeの同期ストレージに保存されます：
-- ストレージキーパターン: `slack_focus_workspace_{workspaceId}`
-- 各ワークスペースはURLパターンで検出: `https://{workspaceId}.slack.com`
-- 異なるSlackワークスペース間の移動時に自動的にワークスペースを切り替え
+## 開発時の注意事項
 
-## コンテンツスクリプト要件
-
-コンテンツスクリプトの作業時は以下に注意：
-- Slack固有のDOMセレクタを対象とする（これらは頻繁に変更される）
-- 動的コンテンツの読み込みとSPAナビゲーションに対応
-- URLとDOM要素からのワークスペース検出を実装
-- DOM変更にはMutationObserverを使用
-- 最小限のCPU使用量でパフォーマンスを維持
-
-## ビルド検証
-
-変更後は必ず以下のコマンドを実行：
-- `npm run compile` - TypeScript型チェック
-- `npm run build` - プロダクションビルド検証
-
-## 開発上の注意点
-
-- SlackはDOM構造とCSSクラスを頻繁に変更する
-- 拡張機能はワークスペース切り替えをシームレスに処理する必要がある
-- コンテンツスクリプトではDOM操作にバニラJavaScriptを使用
-- Reactは設定UI（popup/optionsページ）でのみ使用
-- すべての時間ベースロジックはユーザーのローカルタイムゾーンを考慮する必要がある
+- プロジェクトは `.wxt/tsconfig.json` を拡張してTypeScript設定
+- ポップアップUIコンポーネント用にReact JSXが設定済み
+- 現在のコンテンツスクリプトはスターターテンプレートでGoogle.comを対象にしているが、Slackドメインを対象にする必要がある
+- 拡張機能はManifest V3形式を使用
+- SlackのDOM構造変更により動作に影響する可能性があるため、セレクタの保守に注意
