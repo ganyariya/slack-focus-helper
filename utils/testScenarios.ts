@@ -6,7 +6,7 @@ export class TestScenarios {
   static async createTestData(): Promise<void> {
     console.log('Creating test data...');
 
-    // Test Section Group 1: SNS sites during work hours
+    // Test Section Group 1: SNS sites during work hours (multiple time blocks for testing)
     const snsGroup: SectionGroup = {
       name: 'SNS',
       urls: [
@@ -16,12 +16,13 @@ export class TestScenarios {
       ],
       timeBlocks: [
         { start: '09:00', end: '12:00' },
-        { start: '13:00', end: '17:00' }
+        { start: '13:00', end: '15:00' },
+        { start: '16:00', end: '17:00' }
       ],
       enabled: true
     };
 
-    // Test Section Group 2: Video sites during lunch break
+    // Test Section Group 2: Video sites during lunch break (multiple time blocks for deletion testing)
     const videoGroup: SectionGroup = {
       name: '動画サイト',
       urls: [
@@ -29,7 +30,8 @@ export class TestScenarios {
         'https://www.netflix.com'
       ],
       timeBlocks: [
-        { start: '12:00', end: '13:00' }
+        { start: '12:00', end: '13:00' },
+        { start: '19:00', end: '21:00' }
       ],
       enabled: false // Disabled for testing
     };

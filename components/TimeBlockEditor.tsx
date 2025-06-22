@@ -64,12 +64,16 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
   };
 
   const removeTimeBlock = (index: number) => {
+    console.log('removeTimeBlock called:', { index, timeBlocksLength: timeBlocks.length });
+    
     if (timeBlocks.length <= 1) {
       setError('最低1つの時間ブロックが必要です');
+      console.log('Cannot remove: minimum 1 time block required');
       return;
     }
     
     const updatedBlocks = timeBlocks.filter((_, i) => i !== index);
+    console.log('Updated blocks:', updatedBlocks);
     onTimeBlocksChange(updatedBlocks);
     setError('');
   };

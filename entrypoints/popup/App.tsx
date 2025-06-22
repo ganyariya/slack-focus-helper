@@ -108,13 +108,19 @@ function App() {
   };
 
   const updateTimeBlocks = async (groupName: string, timeBlocks: TimeBlock[]) => {
+    console.log('updateTimeBlocks called:', { groupName, timeBlocks });
     const group = sectionGroups[groupName];
-    if (!group) return;
+    if (!group) {
+      console.log('Group not found:', groupName);
+      return;
+    }
 
     const updatedGroup = { ...group, timeBlocks };
     const success = await StorageManager.saveSectionGroup(groupName, updatedGroup);
+    console.log('Save success:', success);
     if (success) {
       setSectionGroups(prev => ({ ...prev, [groupName]: updatedGroup }));
+      console.log('State updated for group:', groupName);
     }
   };
 
