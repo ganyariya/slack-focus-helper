@@ -20,23 +20,23 @@
 WXTプロジェクトの基本セットアップとSlack対応への変更
 
 ### タスク
-- [ ] **entrypoints/content.ts をSlack用に変更**
-  - [ ] 対象をGoogle.comからSlackドメイン（`*://*.slack.com/*`）に変更
-  - [ ] 基本的なSlackページ検出ロジックを実装
+- [x] **entrypoints/content.ts をSlack用に変更**
+  - [x] 対象をGoogle.comからSlackドメイン（`*://*.slack.com/*`）に変更
+  - [x] 基本的なSlackページ検出ロジックを実装
 
-- [ ] **types/config.ts を作成**
-  - [ ] SPEC.mdに記載されたTypeScript型定義を実装
-  - [ ] `Config`, `WorkspaceConfig`, `TimeBlock`, `GlobalSettings` インターフェース
+- [x] **types/config.ts を作成**
+  - [x] SPEC.mdに記載されたTypeScript型定義を実装
+  - [x] `Config`, `WorkspaceConfig`, `TimeBlock`, `GlobalSettings` インターフェース
 
-- [ ] **ConfigManager クラスを作成**
-  - [ ] Chrome Storage APIとの統合
-  - [ ] 設定の読み込み・保存機能
-  - [ ] ワークスペース別設定管理
+- [x] **ConfigManager クラスを作成**
+  - [x] Chrome Storage APIとの統合
+  - [x] 設定の読み込み・保存機能
+  - [x] ワークスペース別設定管理
 
-- [ ] **Phase 1 リファクタリング**
+- [x] **Phase 1 リファクタリング**
   - コードの整理と最適化
 
-- [ ] **Phase 1 コミット**
+- [x] **Phase 1 コミット**
   - Phase 1の変更をGitにコミット
 
 ---
