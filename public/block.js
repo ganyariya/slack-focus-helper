@@ -1,3 +1,6 @@
+// WXT/Chrome Extension API の統一
+const extensionAPI = globalThis.browser?.runtime?.id ? globalThis.browser : globalThis.chrome;
+
 // URLパラメータから情報を取得
 const urlParams = new URLSearchParams(window.location.search);
 const groupName = urlParams.get('group') || '不明なグループ';
@@ -13,9 +16,9 @@ document.getElementById('blocked-url').textContent = blockedUrl;
 document.getElementById('settings-link').addEventListener('click', async (e) => {
     e.preventDefault();
     try {
-        if (browser && browser.runtime) {
+        if (extensionAPI && extensionAPI.runtime) {
             // Background scriptに設定画面を開くよう要求
-            const response = await browser.runtime.sendMessage({ 
+            const response = await extensionAPI.runtime.sendMessage({ 
                 type: 'OPEN_SETTINGS' 
             });
             
@@ -27,7 +30,9 @@ document.getElementById('settings-link').addEventListener('click', async (e) => 
         console.log('Failed to open settings:', error);
         // フォールバック：現在のタブでポップアップページを開く
         try {
-            window.location.href = browser.runtime.getURL('popup.html');
+            if (extensionAPI && extensionAPI.runtime) {
+                window.location.href = extensionAPI.runtime.getURL('popup.html');
+            }
         } catch (fallbackError) {
             console.error('Fallback also failed:', fallbackError);
         }
@@ -51,8 +56,8 @@ setInterval(updateTime, 1000);
 // 5秒ごとにブロック状態を再チェック
 setInterval(async () => {
     try {
-        if (browser && browser.runtime) {
-            const response = await browser.runtime.sendMessage({
+        if (extensionAPI && extensionAPI.runtime) {
+            const response = await extensionAPI.runtime.sendMessage({
                 type: 'CHECK_BLOCK',
                 url: blockedUrl
             });
