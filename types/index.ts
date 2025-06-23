@@ -28,7 +28,7 @@ export interface TabInfo {
   tabId: number;
 }
 
-export type MessageType = 'CHECK_BLOCK' | 'GET_CURRENT_URL' | 'OPEN_SETTINGS';
+export type MessageType = 'CHECK_BLOCK' | 'GET_CURRENT_URL' | 'OPEN_SETTINGS' | 'ADD_CURRENT_URL';
 
 export interface CheckBlockMessage {
   type: 'CHECK_BLOCK';
@@ -43,7 +43,12 @@ export interface OpenSettingsMessage {
   type: 'OPEN_SETTINGS';
 }
 
-export type ExtensionMessage = CheckBlockMessage | GetCurrentUrlMessage | OpenSettingsMessage;
+export interface AddCurrentUrlMessage {
+  type: 'ADD_CURRENT_URL';
+  groupName: string;
+}
+
+export type ExtensionMessage = CheckBlockMessage | GetCurrentUrlMessage | OpenSettingsMessage | AddCurrentUrlMessage;
 
 export interface CheckBlockResponse extends BlockCheckResult {}
 
@@ -56,4 +61,11 @@ export interface OpenSettingsResponse {
   error?: string;
 }
 
-export type ExtensionMessageResponse = CheckBlockResponse | GetCurrentUrlResponse | OpenSettingsResponse | null;
+export interface AddCurrentUrlResponse {
+  success: boolean;
+  error?: string;
+  url?: string;
+  groupName?: string;
+}
+
+export type ExtensionMessageResponse = CheckBlockResponse | GetCurrentUrlResponse | OpenSettingsResponse | AddCurrentUrlResponse | null;

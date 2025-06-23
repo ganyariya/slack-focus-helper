@@ -27,3 +27,19 @@ export const UI_CONFIG = {
 export const BLOCK_PAGE = {
   RECHECK_INTERVAL: 5000
 } as const;
+
+export const KEYBOARD_SHORTCUTS = {
+  ADD_CURRENT_URL: 'Ctrl+Shift+B'
+} as const;
+
+export const MESSAGES = {
+  SUCCESS: {
+    URL_ADDED: 'URLが追加されました',
+    GROUP_SAVED: 'グループが保存されました'
+  },
+  ERROR: {
+    NO_ACTIVE_GROUPS: '有効なSection Groupが見つかりません',
+    URL_ADD_FAILED: 'URLの追加に失敗しました',
+    URL_GET_FAILED: '現在のタブのURLを取得できませんでした'
+  }
+} as const;

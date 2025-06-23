@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import { KEYBOARD_SHORTCUTS } from './utils/constants';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -18,6 +19,14 @@ export default defineConfig({
     version: '0.1.0',
     action: {
       default_popup: 'popup.html'
+    },
+    commands: {
+      "add-current-url": {
+        suggested_key: {
+          default: KEYBOARD_SHORTCUTS.ADD_CURRENT_URL
+        },
+        description: "現在のURLを追加"
+      }
     }
   }
 });
