@@ -20,27 +20,21 @@ async function handleCheckBlock(message: CheckBlockMessage): Promise<CheckBlockR
 }
 
 async function handleGetCurrentUrl(): Promise<GetCurrentUrlResponse> {
-  console.log('Getting current URL...');
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-  console.log('Found tabs:', tabs);
   
   if (tabs.length > 0 && tabs[0]?.url) {
-    console.log('Current URL:', tabs[0].url);
     return { url: tabs[0].url };
   }
   
-  console.log('No active tab or URL found');
   return { url: null };
 }
 
 async function handleOpenSettings(): Promise<OpenSettingsResponse> {
-  console.log('Opening settings page...');
   try {
     const popupUrl = browser.runtime.getURL('/popup.html');
     await browser.tabs.create({ url: popupUrl });
     return { success: true };
   } catch (error) {
-    console.error('Failed to open settings:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -78,8 +72,6 @@ async function handleMessage(message: ExtensionMessage): Promise<ExtensionMessag
 }
 
 export default defineBackground(() => {
-  console.log('Slack Focus Helper background script started', { id: browser.runtime.id });
-
   StorageManager.initializeStorage();
 
   browser.runtime.onMessage.addListener(handleMessage);

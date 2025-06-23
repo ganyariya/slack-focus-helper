@@ -456,3 +456,78 @@
 .dev-btn:hover {
   background: #e0a800;
 }
+
+/* Import/Export Settings Styles */
+.import-export-settings {
+  padding: 1rem;
+  background: white;
+  border-top: 2px solid #e9ecef;
+}
+
+.import-export-settings h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.import-export-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-btn:hover {
+  background: #138496;
+}
+
+.import-section {
+  position: relative;
+}
+
+.import-btn {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.import-btn:hover {
+  background: #5a32a3;
+}
+
+.import-export-error {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.import-export-success {
+  color: #28a745;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}

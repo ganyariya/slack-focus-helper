@@ -2,9 +2,11 @@ import { SectionGroupItem } from '../../components/SectionGroupItem';
 import { CurrentUrlDisplay } from '../../components/CurrentUrlDisplay';
 import { NewGroupForm } from '../../components/NewGroupForm';
 import { DevelopmentTools } from '../../components/DevelopmentTools';
+import { ImportExportSettings } from '../../components/ImportExportSettings';
 import { TestScenarios } from '../../utils/testScenarios';
 import { useCurrentUrl } from '../../hooks/useCurrentUrl';
 import { useSectionGroups } from '../../hooks/useSectionGroups';
+import type { SectionGroups } from '../../types';
 import './App.css';
 
 function App() {
@@ -24,6 +26,10 @@ function App() {
   const createTestData = async () => {
     await TestScenarios.createTestData();
     await actions.loadGroups();
+  };
+
+  const handleImportSettings = async (data: SectionGroups) => {
+    await actions.importSettings(data);
   };
 
   if (urlLoading || groupsLoading) {
@@ -66,6 +72,11 @@ function App() {
       </div>
 
       <NewGroupForm onCreateGroup={actions.createGroup} />
+      
+      <ImportExportSettings 
+        sectionGroups={sectionGroups}
+        onImport={handleImportSettings}
+      />
       
       <DevelopmentTools 
         onCreateTestData={createTestData}

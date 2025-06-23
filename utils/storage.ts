@@ -109,4 +109,16 @@ export class StorageManager {
       return false;
     }
   }
+
+  static async clearAllSectionGroups(): Promise<boolean> {
+    try {
+      await browser.storage.local.set({ [STORAGE_KEYS.SECTION_GROUPS]: {} });
+      return true;
+    } catch (error) {
+      logError(error instanceof Error ? error : new Error(String(error)), {
+        operation: 'clearAllSectionGroups'
+      });
+      return false;
+    }
+  }
 }

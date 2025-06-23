@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SectionGroup, TimeBlock } from '../types';
+import { SectionGroup, SectionGroups, TimeBlock } from '../types';
 import { StorageManager } from '../utils/storage';
 import { DEFAULT_TIME_BLOCKS } from '../utils/constants';
 
@@ -225,6 +225,24 @@ export function useSectionGroups() {
     }
   }, [sectionGroups]);
 
+  const importSettings = useCallback(async (data: SectionGroups): Promise<boolean> => {
+    try {
+      await StorageManager.clearAllSectionGroups();
+      
+      for (const [groupName, group] of Object.entries(data)) {
+        await StorageManager.saveSectionGroup(groupName, group as SectionGroup);
+      }
+      
+      setSectionGroups(data);
+      setError(null);
+      return true;
+    } catch (err) {
+      console.error('Failed to import settings:', err);
+      setError('設定のインポートに失敗しました');
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
@@ -241,7 +259,8 @@ export function useSectionGroups() {
       renameGroup,
       addUrlToGroup,
       removeUrlFromGroup,
-      updateTimeBlocks
+      updateTimeBlocks,
+      importSettings
     }
   };
 }

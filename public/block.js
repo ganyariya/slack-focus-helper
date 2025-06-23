@@ -27,14 +27,12 @@ document.getElementById('settings-link').addEventListener('click', async (e) => 
             }
         }
     } catch (error) {
-        console.log('Failed to open settings:', error);
         // フォールバック：現在のタブでポップアップページを開く
         try {
             if (extensionAPI && extensionAPI.runtime) {
                 window.location.href = extensionAPI.runtime.getURL('popup.html');
             }
         } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
         }
     }
 });
@@ -68,6 +66,5 @@ setInterval(async () => {
             }
         }
     } catch (error) {
-        console.log('Block check failed:', error);
     }
 }, 5000);

@@ -19,3 +19,11 @@ export const URL_MONITORING = {
   POLLING_INTERVAL: 1000,
   EVENT_DELAY: 100
 } as const;
+
+export const UI_CONFIG = {
+  MIN_TIME_BLOCKS: 1
+} as const;
+
+export const BLOCK_PAGE = {
+  RECHECK_INTERVAL: 5000
+} as const;

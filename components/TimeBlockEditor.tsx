@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TimeBlock } from '../types';
 import { BlockLogic } from '../utils/blockLogic';
 import { isTimeOverlapping, isValidTimeRange, sortTimeBlocksByStart } from '../utils/timeUtils';
-import { DEFAULT_TIME_BLOCKS } from '../utils/constants';
+import { DEFAULT_TIME_BLOCKS, UI_CONFIG } from '../utils/constants';
 
 interface TimeBlockEditorProps {
   timeBlocks: TimeBlock[];
@@ -46,16 +46,12 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
   };
 
   const removeTimeBlock = (index: number) => {
-    console.log('removeTimeBlock called:', { index, timeBlocksLength: timeBlocks.length });
-    
-    if (timeBlocks.length <= 1) {
+    if (timeBlocks.length <= UI_CONFIG.MIN_TIME_BLOCKS) {
       setError('最低1つの時間ブロックが必要です');
-      console.log('Cannot remove: minimum 1 time block required');
       return;
     }
     
     const updatedBlocks = timeBlocks.filter((_, i) => i !== index);
-    console.log('Updated blocks:', updatedBlocks);
     onTimeBlocksChange(updatedBlocks);
     setError('');
   };
@@ -103,7 +99,7 @@ export function TimeBlockEditor({ timeBlocks, onTimeBlocksChange }: TimeBlockEdi
             <button
               onClick={() => removeTimeBlock(index)}
               className="remove-time-btn"
-              disabled={timeBlocks.length <= 1}
+              disabled={timeBlocks.length <= UI_CONFIG.MIN_TIME_BLOCKS}
               title="時間ブロックを削除"
             >
               ×

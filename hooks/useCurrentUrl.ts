@@ -9,20 +9,16 @@ export function useCurrentUrl() {
   const fetchCurrentUrl = async () => {
     try {
       setError(null);
-      console.log('Requesting current URL...');
       
       const response = await browser.runtime.sendMessage({ 
         type: 'GET_CURRENT_URL' 
       }) as GetCurrentUrlResponse;
-      
-      console.log('Response:', response);
       
       if (response?.url) {
         setCurrentUrl(response.url);
         return;
       }
       
-      console.log('No URL in response, trying fallback...');
       const tabs = await browser.tabs.query({ active: true, currentWindow: true });
       
       if (tabs[0]?.url) {
@@ -31,7 +27,6 @@ export function useCurrentUrl() {
         setError('現在のURLを取得できませんでした');
       }
     } catch (err) {
-      console.error('Failed to fetch current URL:', err);
       setError('URLの取得に失敗しました');
     } finally {
       setLoading(false);

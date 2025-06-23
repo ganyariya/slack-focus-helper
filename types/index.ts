@@ -14,6 +14,8 @@ export interface StorageData {
   sectionGroups: Record<string, SectionGroup>;
 }
 
+export type SectionGroups = Record<string, SectionGroup>;
+
 export interface BlockCheckResult {
   shouldBlock: boolean;
   groupName?: string;
